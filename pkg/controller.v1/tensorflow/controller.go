@@ -60,6 +60,7 @@ const (
 	labelTFJobRole            = "tf-job-role"
 	roleSequenceEnvKey        = "ROLE_SEQUENCE"
 	roleSequenceAnnotationKey = "job-role-sequence"
+	suspendInQueue            = "scheduling.x-k8s.io/suspend"
 )
 
 var (
@@ -258,6 +259,15 @@ func (tc *TFController) processNextWorkItem() bool {
 		}
 
 		return true
+	}
+
+	// Wait until queuing annotation is removed
+	if tfJob.Annotations != nil {
+		if suspend, exist := tfJob.Annotations[suspendInQueue]; exist && suspend == "true" {
+			infoMsg := fmt.Sprintf("Annotation %s is found, operator will not process until removed", suspendInQueue)
+			tflogger.LoggerForKey(key).Info(infoMsg)
+			return true
+		}
 	}
 
 	// Sync TFJob to match the actual state to this desired state.
