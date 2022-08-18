@@ -85,7 +85,7 @@ func genTFConfigJSONStr(tfjob *tfv1.TFJob, rtype, index string) (string, error) 
 	tfConfig := TFConfig{
 		Cluster: cluster,
 		Task: TaskSpec{
-			Type:  rtype,
+			Type:  strings.ToLower(rtype),
 			Index: int(i),
 		},
 		// We need to set environment to cloud  otherwise it will default to local which isn't what we want.
@@ -107,11 +107,13 @@ func genClusterSpec(tfjob *tfv1.TFJob) (ClusterSpec, error) {
 	clusterSpec := make(ClusterSpec)
 
 	for rtype, spec := range tfjob.Spec.TFReplicaSpecs {
-		if rtype == tfv1.TFReplicaTypeEval {
-			// https://www.tensorflow.org/api_docs/python/tf/estimator/RunConfig
-			// evaluator is not part of training cluster
-			continue
-		}
+		// fix issue https://github.com/kubeflow/training-operator/issues/1139
+		// NOTE: may incompatible with tf version <= 1.12
+		//if rtype == tfv1.TFReplicaTypeEval {
+		//	// https://www.tensorflow.org/api_docs/python/tf/estimator/RunConfig
+		//	// evaluator is not part of training cluster
+		//	continue
+		//}
 		rt := strings.ToLower(string(rtype))
 		replicaNames := make([]string, 0, *spec.Replicas)
 
