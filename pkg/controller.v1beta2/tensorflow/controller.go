@@ -100,14 +100,14 @@ type TFController struct {
 
 // NewTFController returns a new TFJob controller.
 func NewTFController(
-	// This variable is for unstructured informer.
+// This variable is for unstructured informer.
 	tfJobInformer tfjobinformersv1beta2.TFJobInformer,
 	kubeClientSet kubeclientset.Interface,
 	kubeBatchClientSet kubebatchclient.Interface,
 	tfJobClientSet tfjobclientset.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-	// This field is not used now but we keep it since it will be used
-	// after we support CRD validation.
+// This field is not used now but we keep it since it will be used
+// after we support CRD validation.
 	tfJobInformerFactory tfjobinformers.SharedInformerFactory,
 	option options.ServerOption) *TFController {
 
@@ -479,6 +479,11 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 		// Check the expectations of the services.
 		expectationServicesKey := jobcontroller.GenExpectationServicesKey(tfjobKey, string(rtype))
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
+	}
+
+	jobConditionType := tfjob.Status.Conditions[len(tfjob.Status.Conditions)-1].Type
+	if jobConditionType == common.JobSucceeded || jobConditionType == common.JobFailed {
+		satisfied = false
 	}
 
 	return satisfied

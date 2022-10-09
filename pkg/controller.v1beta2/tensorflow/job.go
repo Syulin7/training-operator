@@ -118,7 +118,10 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	tc.enqueueTFJob(cur)
+	oldJobConditionType := oldTFJob.Status.Conditions[len(oldTFJob.Status.Conditions)-1].Type
+	if oldJobConditionType != common.JobSucceeded && oldJobConditionType != common.JobFailed {
+		tc.enqueueTFJob(cur)
+	}
 
 	// check if need to add a new rsync for ActiveDeadlineSeconds
 	if curTFJob.Status.StartTime != nil {
