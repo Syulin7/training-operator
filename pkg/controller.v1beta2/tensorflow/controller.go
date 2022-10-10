@@ -17,6 +17,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"reflect"
 	"strings"
 	"time"
@@ -100,14 +101,14 @@ type TFController struct {
 
 // NewTFController returns a new TFJob controller.
 func NewTFController(
-	// This variable is for unstructured informer.
+// This variable is for unstructured informer.
 	tfJobInformer tfjobinformersv1beta2.TFJobInformer,
 	kubeClientSet kubeclientset.Interface,
 	kubeBatchClientSet kubebatchclient.Interface,
 	tfJobClientSet tfjobclientset.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-	// This field is not used now but we keep it since it will be used
-	// after we support CRD validation.
+// This field is not used now but we keep it since it will be used
+// after we support CRD validation.
 	tfJobInformerFactory tfjobinformers.SharedInformerFactory,
 	option options.ServerOption) *TFController {
 
@@ -479,6 +480,10 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 		// Check the expectations of the services.
 		expectationServicesKey := jobcontroller.GenExpectationServicesKey(tfjobKey, string(rtype))
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
+	}
+
+	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil {
+		satisfied = false
 	}
 
 	return satisfied

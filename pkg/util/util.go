@@ -18,10 +18,11 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	commonv1 "github.com/kubeflow/tf-operator/pkg/apis/common/v1"
+	commonv1beta2 "github.com/kubeflow/tf-operator/pkg/apis/common/v1beta2"
+	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -72,4 +73,22 @@ func RandString(n int) string {
 	}
 
 	return string(b)
+}
+
+func CheckJobCompletedV1(conditions []commonv1.JobCondition) bool {
+	for _, condition := range conditions {
+		if condition.Type == commonv1.JobSucceeded || condition.Type == commonv1.JobFailed {
+			return true
+		}
+	}
+	return false
+}
+
+func CheckJobCompletedV1Beta2(conditions []commonv1beta2.JobCondition) bool {
+	for _, condition := range conditions {
+		if condition.Type == commonv1beta2.JobSucceeded || condition.Type == commonv1beta2.JobFailed {
+			return true
+		}
+	}
+	return false
 }

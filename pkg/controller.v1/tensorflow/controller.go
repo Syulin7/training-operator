@@ -17,6 +17,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"os"
 	"reflect"
 	"strings"
@@ -508,6 +509,10 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1.TFJob) bool {
 		// Check the expectations of the services.
 		expectationServicesKey := jobcontroller.GenExpectationServicesKey(tfjobKey, string(rtype))
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
+	}
+
+	if util.CheckJobCompletedV1(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil {
+		satisfied = false
 	}
 
 	return satisfied

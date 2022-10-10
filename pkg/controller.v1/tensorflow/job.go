@@ -2,6 +2,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -128,7 +129,9 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	tc.enqueueTFJob(cur)
+	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil) {
+		tc.enqueueTFJob(cur)
+	}
 
 	// check if need to add a new rsync for ActiveDeadlineSeconds
 	if curTFJob.Status.StartTime != nil {
