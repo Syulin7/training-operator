@@ -482,7 +482,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 	}
 
 	jobConditionType := tfjob.Status.Conditions[len(tfjob.Status.Conditions)-1].Type
-	if jobConditionType == common.JobSucceeded || jobConditionType == common.JobFailed {
+	if (jobConditionType == common.JobSucceeded || jobConditionType == common.JobFailed) && tfjob.DeletionTimestamp != nil {
 		satisfied = false
 	}
 

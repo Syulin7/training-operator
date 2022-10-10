@@ -119,7 +119,7 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
 	oldJobConditionType := oldTFJob.Status.Conditions[len(oldTFJob.Status.Conditions)-1].Type
-	if oldJobConditionType != common.JobSucceeded && oldJobConditionType != common.JobFailed {
+	if oldJobConditionType != common.JobSucceeded && oldJobConditionType != common.JobFailed && oldTFJob.DeletionTimestamp != nil {
 		tc.enqueueTFJob(cur)
 	}
 
