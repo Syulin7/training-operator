@@ -119,7 +119,7 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	if !(util.CheckJobCompletedV1Beta2(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp != nil) {
+	if !(util.CheckJobCompletedV1Beta2(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil) {
 		tc.enqueueTFJob(cur)
 	}
 

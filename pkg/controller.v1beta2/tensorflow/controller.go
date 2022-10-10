@@ -482,7 +482,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 
-	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp != nil {
+	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil {
 		satisfied = false
 	}
 
