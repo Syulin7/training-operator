@@ -2,6 +2,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -128,8 +129,7 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	oldJobConditionType := oldTFJob.Status.Conditions[len(oldTFJob.Status.Conditions)-1].Type
-	if oldJobConditionType != common.JobSucceeded && oldJobConditionType != common.JobFailed && oldTFJob.DeletionTimestamp != nil {
+	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp != nil) {
 		tc.enqueueTFJob(cur)
 	}
 

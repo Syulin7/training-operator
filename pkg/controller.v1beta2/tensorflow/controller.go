@@ -17,6 +17,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"reflect"
 	"strings"
 	"time"
@@ -481,8 +482,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 
-	jobConditionType := tfjob.Status.Conditions[len(tfjob.Status.Conditions)-1].Type
-	if (jobConditionType == common.JobSucceeded || jobConditionType == common.JobFailed) && tfjob.DeletionTimestamp != nil {
+	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp != nil {
 		satisfied = false
 	}
 
