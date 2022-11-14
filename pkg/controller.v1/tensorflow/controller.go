@@ -62,6 +62,9 @@ const (
 	roleSequenceEnvKey        = "ROLE_SEQUENCE"
 	roleSequenceAnnotationKey = "job-role-sequence"
 	suspendInQueue            = "scheduling.x-k8s.io/suspend"
+
+	TFCleanPodStatusLabel = "arena.kubeflow.org/clean-pod-status"
+	TFCleanStatusDone     = "done"
 )
 
 var (
@@ -511,7 +514,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1.TFJob) bool {
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 
-	if util.CheckJobCompletedV1(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil && tfjob.Annotations["arena.kubeflow.org/clean-pod-status"] == "done" {
+	if util.CheckJobCompletedV1(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil && tfjob.Annotations[TFCleanPodStatusLabel] == TFCleanStatusDone {
 		satisfied = false
 	}
 
