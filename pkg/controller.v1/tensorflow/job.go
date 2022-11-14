@@ -129,7 +129,7 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil) {
+	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil && oldTFJob.Annotations["arena.kubeflow.org/clean-pod-status"] == "done") {
 		tc.enqueueTFJob(cur)
 	}
 
@@ -174,6 +174,12 @@ func (tc *TFController) deletePodsAndServices(tfJob *tfv1.TFJob, pods []*v1.Pod)
 			return err
 		}
 	}
+	tfJob.Annotations["arena.kubeflow.org/clean-pod-status"] = "done"
+	_, err := tc.tfJobClientSet.KubeflowV1().TFJobs(tfJob.Namespace).Update(tfJob)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
