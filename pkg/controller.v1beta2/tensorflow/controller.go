@@ -56,6 +56,9 @@ const (
 	labelGroupName      = "group-name"
 	labelTFJobName      = "tf-job-name"
 	labelTFJobRole      = "tf-job-role"
+
+	TFCleanPodStatusLabel = "arena.kubeflow.org/clean-pod-status"
+	TFCleanStatusDone     = "done"
 )
 
 var (
@@ -482,7 +485,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1beta2.TFJob) bool {
 		satisfied = satisfied || tc.Expectations.SatisfiedExpectations(expectationServicesKey)
 	}
 
-	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil {
+	if util.CheckJobCompletedV1Beta2(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil && tfjob.Annotations[TFCleanPodStatusLabel] == TFCleanStatusDone {
 		satisfied = false
 	}
 

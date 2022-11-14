@@ -3,6 +3,7 @@ package tensorflow
 import (
 	"fmt"
 	"github.com/kubeflow/tf-operator/pkg/util"
+	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -129,7 +130,7 @@ func (tc *TFController) updateTFJob(old, cur interface{}) {
 	}
 
 	log.Infof("Updating tfjob: %s", oldTFJob.Name)
-	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil) {
+	if !(util.CheckJobCompletedV1(oldTFJob.Status.Conditions) && oldTFJob.DeletionTimestamp == nil && oldTFJob.Annotations[TFCleanPodStatusLabel] == TFCleanStatusDone) {
 		tc.enqueueTFJob(cur)
 	}
 
@@ -174,6 +175,16 @@ func (tc *TFController) deletePodsAndServices(tfJob *tfv1.TFJob, pods []*v1.Pod)
 			return err
 		}
 	}
+
+	tfjobToUpdate := tfJob.DeepCopy()
+	tfjobToUpdate.Annotations[TFCleanPodStatusLabel] = TFCleanStatusDone
+	if !reflect.DeepEqual(tfJob, tfjobToUpdate) {
+		_, err := tc.tfJobClientSet.KubeflowV1().TFJobs(tfjobToUpdate.Namespace).Update(tfjobToUpdate)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
