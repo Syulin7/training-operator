@@ -46,6 +46,7 @@ const (
 	// podTemplateSchedulerNameReason is the warning reason when other scheduler name is set
 	// in pod templates with gang-scheduling enabled
 	podTemplateSchedulerNameReason = "SettedPodTemplateSchedulerName"
+	disableTFConfigAnnotation      = "arena.kubeflow.org/disable-tf-config"
 )
 
 // reconcilePods checks and updates pods for each given TFReplicaSpec.
@@ -168,7 +169,7 @@ func (tc *TFController) createNewPod(tfjob *tfv1.TFJob, rt, index string, spec *
 		podTemplate.Labels[key] = value
 	}
 
-	if *(spec.Replicas) > 1 {
+	if value, ok := tfjob.Annotations[disableTFConfigAnnotation]; !ok || value != "true" {
 		if err := setClusterSpec(podTemplate, tfjob, rt, index); err != nil {
 			return err
 		}
