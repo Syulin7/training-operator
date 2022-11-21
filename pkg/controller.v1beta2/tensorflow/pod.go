@@ -168,8 +168,10 @@ func (tc *TFController) createNewPod(tfjob *tfv1beta2.TFJob, rt, index string, s
 		podTemplate.Labels[key] = value
 	}
 
-	if err := setClusterSpec(podTemplate, tfjob, rt, index); err != nil {
-		return err
+	if *(spec.Replicas) > 1 {
+		if err := setClusterSpec(podTemplate, tfjob, rt, index); err != nil {
+			return err
+		}
 	}
 
 	// Submit a warning event if the user specifies restart policy for
