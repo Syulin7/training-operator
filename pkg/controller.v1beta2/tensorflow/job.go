@@ -153,8 +153,12 @@ func (tc *TFController) deletePodsAndServices(tfJob *tfv1beta2.TFJob, pods []*v1
 		return nil
 	}
 
+	isTfjobCleanDone := true
 	for _, pod := range pods {
 		if *tfJob.Spec.CleanPodPolicy == common.CleanPodPolicyRunning && pod.Status.Phase != v1.PodRunning {
+			if pod.Status.Phase == v1.PodPending {
+				isTfjobCleanDone = false
+			}
 			continue
 		}
 		if err := tc.PodControl.DeletePod(pod.Namespace, pod.Name, tfJob); err != nil {
@@ -167,7 +171,9 @@ func (tc *TFController) deletePodsAndServices(tfJob *tfv1beta2.TFJob, pods []*v1
 	}
 
 	tfjobToUpdate := tfJob.DeepCopy()
-	tfjobToUpdate.Annotations[TFCleanPodStatusLabel] = TFCleanStatusDone
+	if isTfjobCleanDone {
+		tfjobToUpdate.Annotations[TFCleanPodStatusLabel] = TFCleanStatusDone
+	}
 	if !reflect.DeepEqual(tfJob, tfjobToUpdate) {
 		_, err := tc.tfJobClientSet.KubeflowV1beta2().TFJobs(tfjobToUpdate.Namespace).Update(tfjobToUpdate)
 		if err != nil {
