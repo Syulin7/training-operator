@@ -65,6 +65,10 @@ const (
 
 	TFCleanPodStatusLabel = "arena.kubeflow.org/clean-pod-status"
 	TFCleanStatusDone     = "done"
+
+	TFPodGroupSettingLabel     = "pod-group.scheduling.sigs.k8s.io/name"
+	TFGangJobRunningAnnotation = "arena.kubeflow.org/gang-running"
+	TFGangJobRunningTrue       = "true"
 )
 
 var (
@@ -358,7 +362,7 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1.TFJob) error {
 	logger := tflogger.LoggerForJob(tfjob)
 	logger.Infof("Reconcile TFJobs %s", tfjob.Name)
 
-	oldStatus := tfjob.Status.DeepCopy()
+	oldTFJob := tfjob.DeepCopy()
 
 	pods, err := tc.GetPodsForJob(tfjob)
 
@@ -486,10 +490,11 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1.TFJob) error {
 		}
 	}
 
-	// no need to update the tfjob if the status hasn't changed since last time.
-	if !reflect.DeepEqual(*oldStatus, tfjob.Status) {
-		return tc.updateStatusHandler(tfjob)
+	if !reflect.DeepEqual(oldTFJob, tfjob) {
+		_, err = tc.tfJobClientSet.KubeflowV1().TFJobs(tfjob.Namespace).Update(tfjob)
+		return err
 	}
+
 	return nil
 }
 

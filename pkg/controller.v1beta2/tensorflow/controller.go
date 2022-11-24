@@ -59,6 +59,10 @@ const (
 
 	TFCleanPodStatusLabel = "arena.kubeflow.org/clean-pod-status"
 	TFCleanStatusDone     = "done"
+
+	TFPodGroupSettingLabel     = "pod-group.scheduling.sigs.k8s.io/name"
+	TFGangJobRunningAnnotation = "arena.kubeflow.org/gang-running"
+	TFGangJobRunningTrue       = "true"
 )
 
 var (
@@ -104,14 +108,14 @@ type TFController struct {
 
 // NewTFController returns a new TFJob controller.
 func NewTFController(
-// This variable is for unstructured informer.
+	// This variable is for unstructured informer.
 	tfJobInformer tfjobinformersv1beta2.TFJobInformer,
 	kubeClientSet kubeclientset.Interface,
 	kubeBatchClientSet kubebatchclient.Interface,
 	tfJobClientSet tfjobclientset.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-// This field is not used now but we keep it since it will be used
-// after we support CRD validation.
+	// This field is not used now but we keep it since it will be used
+	// after we support CRD validation.
 	tfJobInformerFactory tfjobinformers.SharedInformerFactory,
 	option options.ServerOption) *TFController {
 
@@ -336,7 +340,7 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1beta2.TFJob) error {
 	logger := tflogger.LoggerForJob(tfjob)
 	logger.Infof("Reconcile TFJobs %s", tfjob.Name)
 
-	oldStatus := tfjob.Status.DeepCopy()
+	oldTFJob := tfjob.DeepCopy()
 
 	pods, err := tc.GetPodsForJob(tfjob)
 
@@ -457,10 +461,11 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1beta2.TFJob) error {
 		}
 	}
 
-	// no need to update the tfjob if the status hasn't changed since last time.
-	if !reflect.DeepEqual(*oldStatus, tfjob.Status) {
-		return tc.updateStatusHandler(tfjob)
+	if !reflect.DeepEqual(oldTFJob, tfjob) {
+		_, err = tc.tfJobClientSet.KubeflowV1beta2().TFJobs(tfjob.Namespace).Update(tfjob)
+		return err
 	}
+
 	return nil
 }
 
