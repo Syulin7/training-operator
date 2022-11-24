@@ -180,8 +180,8 @@ func (tc *TFController) deletePodsAndServices(tfJob *tfv1.TFJob, pods []*v1.Pod)
 		}
 	}
 
-	tfjobToUpdate := tfJob.DeepCopy()
 	if isTfjobCleanDone {
+		tfjobToUpdate := tfJob.DeepCopy()
 		tfjobToUpdate.Annotations[TFCleanPodStatusLabel] = TFCleanStatusDone
 		if !reflect.DeepEqual(tfJob, tfjobToUpdate) {
 			_, err := tc.tfJobClientSet.KubeflowV1().TFJobs(tfjobToUpdate.Namespace).Update(tfjobToUpdate)
