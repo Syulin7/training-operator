@@ -57,11 +57,11 @@ func CheckTFJobIsNotPending(tfJob *tfv1.TFJob) bool {
 		tfJobStatus.ReplicaStatuses = map[common.ReplicaType]*common.ReplicaStatus{}
 	}
 
-	runningCount := int32(0)
+	createdCount := int32(0)
 	for _, status := range tfJobStatus.ReplicaStatuses {
-		runningCount += status.Active + status.Succeeded + status.Failed
+		createdCount += status.Active + status.Succeeded + status.Failed
 	}
 	jobCondition := tfJobStatus.Conditions[len(tfJobStatus.Conditions)-1].Type
 
-	return runningCount > 0 && jobCondition != common.JobCreated && jobCondition != common.JobRestarting
+	return createdCount > 0 && jobCondition != common.JobCreated && jobCondition != common.JobRestarting
 }
