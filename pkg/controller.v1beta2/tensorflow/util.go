@@ -16,7 +16,7 @@ package tensorflow
 
 import (
 	"fmt"
-
+	common "github.com/kubeflow/tf-operator/pkg/apis/common/v1beta2"
 	tfv1beta2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1beta2"
 )
 
@@ -48,4 +48,19 @@ func ContainChieforMasterSpec(tfJob *tfv1beta2.TFJob) bool {
 		return true
 	}
 	return false
+}
+
+func CheckTFJobIsNotPending(tfJob *tfv1beta2.TFJob) bool {
+	tfJobStatus := tfJob.Status.DeepCopy()
+	if tfJobStatus.ReplicaStatuses == nil {
+		tfJobStatus.ReplicaStatuses = map[common.ReplicaType]*common.ReplicaStatus{}
+	}
+
+	runningCount := int32(0)
+	for _, status := range tfJobStatus.ReplicaStatuses {
+		runningCount += status.Active + status.Succeeded + status.Failed
+	}
+	jobCondition := tfJobStatus.Conditions[len(tfJobStatus.Conditions)-1].Type
+
+	return runningCount > 0 && jobCondition != common.JobCreated && jobCondition != common.JobRestarting
 }

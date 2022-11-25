@@ -157,14 +157,6 @@ func (tc *TFController) updateTFJobStatus(tfjob *tfv1beta2.TFJob) error {
 // updateTFJobConditions updates the conditions of the given tfjob.
 func updateTFJobConditions(tfjob *tfv1beta2.TFJob, conditionType common.JobConditionType, reason, message string) error {
 	condition := newCondition(conditionType, reason, message)
-
-	if _, ok := tfjob.Labels[TFPodGroupSettingLabel]; ok && condition.Type == common.JobRunning {
-		if tfjob.Annotations == nil {
-			tfjob.Annotations = map[string]string{}
-		}
-		tfjob.Annotations[TFGangJobRunningAnnotation] = TFGangJobRunningTrue
-	}
-
 	setCondition(&tfjob.Status, condition)
 	return nil
 }
