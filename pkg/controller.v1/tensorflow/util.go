@@ -52,16 +52,17 @@ func ContainChieforMasterSpec(tfJob *tfv1.TFJob) bool {
 }
 
 func CheckTFJobIsNotPending(tfJob *tfv1.TFJob) bool {
-	tfJobStatus := tfJob.Status
-	if tfJobStatus.ReplicaStatuses == nil {
-		tfJobStatus.ReplicaStatuses = map[common.ReplicaType]*common.ReplicaStatus{}
+	checkResult := false
+
+	if tfJob.Status.Conditions == nil {
+		return checkResult
+	}
+	tfJobConditions := tfJob.Status.Conditions
+	for _, condition := range tfJobConditions {
+		if condition.Type == common.JobRunning {
+			checkResult = true
+		}
 	}
 
-	createdCount := int32(0)
-	for _, status := range tfJobStatus.ReplicaStatuses {
-		createdCount += status.Active + status.Succeeded + status.Failed
-	}
-	jobCondition := tfJobStatus.Conditions[len(tfJobStatus.Conditions)-1].Type
-
-	return createdCount > 0 && jobCondition != common.JobCreated && jobCondition != common.JobRestarting
+	return checkResult
 }
