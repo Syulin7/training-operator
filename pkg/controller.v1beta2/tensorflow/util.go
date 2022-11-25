@@ -51,7 +51,7 @@ func ContainChieforMasterSpec(tfJob *tfv1beta2.TFJob) bool {
 }
 
 func CheckTFJobIsNotPending(tfJob *tfv1beta2.TFJob) bool {
-	tfJobStatus := tfJob.Status.DeepCopy()
+	tfJobStatus := tfJob.Status
 	if tfJobStatus.ReplicaStatuses == nil {
 		tfJobStatus.ReplicaStatuses = map[common.ReplicaType]*common.ReplicaStatus{}
 	}
