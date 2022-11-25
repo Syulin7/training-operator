@@ -59,6 +59,8 @@ const (
 
 	TFCleanPodStatusLabel = "arena.kubeflow.org/clean-pod-status"
 	TFCleanStatusDone     = "done"
+
+	TFPodGroupSettingLabel = "pod-group.scheduling.sigs.k8s.io/name"
 )
 
 var (
@@ -104,14 +106,14 @@ type TFController struct {
 
 // NewTFController returns a new TFJob controller.
 func NewTFController(
-// This variable is for unstructured informer.
+	// This variable is for unstructured informer.
 	tfJobInformer tfjobinformersv1beta2.TFJobInformer,
 	kubeClientSet kubeclientset.Interface,
 	kubeBatchClientSet kubebatchclient.Interface,
 	tfJobClientSet tfjobclientset.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-// This field is not used now but we keep it since it will be used
-// after we support CRD validation.
+	// This field is not used now but we keep it since it will be used
+	// after we support CRD validation.
 	tfJobInformerFactory tfjobinformers.SharedInformerFactory,
 	option options.ServerOption) *TFController {
 
@@ -461,6 +463,7 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1beta2.TFJob) error {
 	if !reflect.DeepEqual(*oldStatus, tfjob.Status) {
 		return tc.updateStatusHandler(tfjob)
 	}
+
 	return nil
 }
 

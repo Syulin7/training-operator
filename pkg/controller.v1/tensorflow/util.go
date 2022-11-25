@@ -16,6 +16,7 @@ package tensorflow
 
 import (
 	"fmt"
+	common "github.com/kubeflow/tf-operator/pkg/apis/common/v1"
 
 	tfv1 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1"
 )
@@ -48,4 +49,20 @@ func ContainChieforMasterSpec(tfJob *tfv1.TFJob) bool {
 		return true
 	}
 	return false
+}
+
+func CheckTFJobIsNotPending(tfJob *tfv1.TFJob) bool {
+	checkResult := false
+
+	if tfJob.Status.Conditions == nil {
+		return checkResult
+	}
+	tfJobConditions := tfJob.Status.Conditions
+	for _, condition := range tfJobConditions {
+		if condition.Type == common.JobRunning {
+			checkResult = true
+		}
+	}
+
+	return checkResult
 }

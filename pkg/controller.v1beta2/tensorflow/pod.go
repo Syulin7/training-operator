@@ -133,6 +133,12 @@ func (tc *TFController) reconcilePods(
 
 // createNewPod creates a new pod for the given index and type.
 func (tc *TFController) createNewPod(tfjob *tfv1beta2.TFJob, rt, index string, spec *common.ReplicaSpec, masterRole bool) error {
+	if spec.Template.Labels == nil {
+		spec.Template.Labels = map[string]string{}
+	}
+	if _, ok := spec.Template.Labels[TFPodGroupSettingLabel]; ok && CheckTFJobIsNotPending(tfjob) {
+		return nil
+	}
 	tfjobKey, err := KeyFunc(tfjob)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("couldn't get key for tfjob object %#v: %v", tfjob, err))
