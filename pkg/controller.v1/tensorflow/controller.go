@@ -17,11 +17,12 @@ package tensorflow
 
 import (
 	"fmt"
-	"github.com/kubeflow/tf-operator/pkg/util"
 	"os"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/kubeflow/tf-operator/pkg/util"
 
 	kubebatchclient "github.com/kubernetes-sigs/kube-batch/pkg/client/clientset/versioned"
 	log "github.com/sirupsen/logrus"
@@ -70,6 +71,8 @@ const (
 
 	TFJobEvictAnnotation = "cluster-autoscaler.alibabacloud.com/evict-for-failed-pod"
 	PodEvictAnnotation   = "cluster-autoscaler.kubernetes.io/safe-to-evict"
+
+	TFJobWaitingWorkerAnnotation = "arena.kubeflow.org/pod.ttlSecondsAfterFinished"
 )
 
 var (
@@ -424,8 +427,14 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1.TFJob) error {
 
 	// If the TFJob is terminated, delete all pods and services.
 	if isSucceeded(tfjob.Status) || isFailed(tfjob.Status) || tfJobExceedsLimit {
-		if err := tc.deletePodsAndServices(tfjob, pods); err != nil {
-			return err
+
+		// If TTL is set, you need to wait until the TTL time before reclaiming resources.
+		ttlDuration, shouldWaitPodTTL := getPodTTL(tfjob)
+
+		if !shouldWaitPodTTL || isPodTTLReached(tfjob, ttlDuration) {
+			if err := tc.deletePodsAndServices(tfjob, pods); err != nil {
+				return err
+			}
 		}
 
 		if tfJobExceedsLimit {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -238,6 +239,33 @@ func (tc *TFController) createNewPod(tfjob *tfv1.TFJob, rt, index string, spec *
 		return err
 	}
 	return nil
+}
+
+func getPodTTL(tfjob *tfv1.TFJob) (time.Duration, bool) {
+	logger := tflogger.LoggerForJob(tfjob)
+	if value, ok := tfjob.Annotations[TFJobWaitingWorkerAnnotation]; ok {
+		ttlDuration, err := time.ParseDuration(value)
+		if err != nil {
+			logger.Infof("parseDuration error: %s", err.Error())
+			return 0, false
+		}
+		if ttlDuration > 0 {
+			return ttlDuration, true
+		} else {
+			logger.Infof("the pod ttl annotation should be greater than 0")
+			return 0, false
+		}
+	} else {
+		logger.Infof("don't have annotation arena.kubeflow.org/pod.ttlSecondsAfterFinished")
+		return 0, false
+	}
+}
+
+func isPodTTLReached(tfjob *tfv1.TFJob, ttlDuration time.Duration) bool {
+	if time.Now().Sub(tfjob.Status.CompletionTime.Time) > ttlDuration {
+		return true
+	}
+	return false
 }
 
 func setClusterSpec(podTemplateSpec *v1.PodTemplateSpec, tfjob *tfv1.TFJob, rt, index string) error {

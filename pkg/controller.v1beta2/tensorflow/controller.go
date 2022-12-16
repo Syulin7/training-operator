@@ -64,6 +64,8 @@ const (
 
 	TFJobEvictAnnotation = "cluster-autoscaler.alibabacloud.com/evict-for-failed-pod"
 	PodEvictAnnotation   = "cluster-autoscaler.kubernetes.io/safe-to-evict"
+
+	TFJobWaitingWorkerAnnotation = "arena.kubeflow.org/pod.ttlSecondsAfterFinished"
 )
 
 var (
@@ -402,8 +404,14 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1beta2.TFJob) error {
 
 	// If the TFJob is terminated, delete all pods and services.
 	if isSucceeded(tfjob.Status) || isFailed(tfjob.Status) || tfJobExceedsLimit {
-		if err := tc.deletePodsAndServices(tfjob, pods); err != nil {
-			return err
+
+		// If TTL is set, you need to wait until the TTL time before reclaiming resources.
+		ttlDuration, shouldWaitPodTTL := getPodTTL(tfjob)
+
+		if !shouldWaitPodTTL || isPodTTLReached(tfjob, ttlDuration) {
+			if err := tc.deletePodsAndServices(tfjob, pods); err != nil {
+				return err
+			}
 		}
 
 		if tfJobExceedsLimit {
