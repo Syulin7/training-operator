@@ -225,21 +225,28 @@ func (tc *TFController) cleanupTFJob(tfJob *tfv1.TFJob) error {
 		return nil
 	}
 	duration := time.Second * time.Duration(*ttl)
-	if currentTime.After(tfJob.Status.CompletionTime.Add(duration)) {
+	if tfJob.Status.CompletionTime == nil {
+		return fmt.Errorf("job completion time is nil, cannot cleanup")
+	}
+	finishTime := tfJob.Status.CompletionTime
+	expireTime := finishTime.Add(duration)
+	if currentTime.After(expireTime) {
 		err := tc.deleteTFJobHandler(tfJob)
 		if err != nil {
 			tflogger.LoggerForJob(tfJob).Warnf("Cleanup TFJob error: %v.", err)
 			return err
 		}
 		return nil
+	} else {
+		remaining := expireTime.Sub(currentTime)
+		key, err := KeyFunc(tfJob)
+		if err != nil {
+			tflogger.LoggerForJob(tfJob).Warnf("Couldn't get key for tfjob object: %v", err)
+			return err
+		}
+		tc.WorkQueue.AddAfter(key, remaining)
+		return nil
 	}
-	key, err := KeyFunc(tfJob)
-	if err != nil {
-		tflogger.LoggerForJob(tfJob).Warnf("Couldn't get key for tfjob object: %v", err)
-		return err
-	}
-	tc.WorkQueue.AddRateLimited(key)
-	return nil
 }
 
 // deleteTFJob deletes the given TFJob.
