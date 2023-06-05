@@ -12,14 +12,14 @@ var (
 			Name: "tf_operator_jobs_created",
 			Help: "Counts number of TF jobs created",
 		},
-		[]string{"job_namespace", "job_name"},
+		[]string{"job_namespace"},
 	)
 	tfJobsSuccessCount = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "tf_operator_jobs_successful",
 			Help: "Counts number of TF jobs successful",
 		},
-		[]string{"job_namespace", "job_name"},
+		[]string{"job_namespace"},
 	)
 	tfJobsFailedCount = promauto.NewCounterVec(
 		prometheus.CounterOpts{
@@ -40,22 +40,16 @@ var (
 			Name: "tf_operator_jobs_deleted",
 			Help: "Counts number of TF jobs deleted",
 		},
-		[]string{"job_namespace", "job_name"},
-	)
-	tfJobsWorkQueueLength = promauto.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "tf_operator_work_queue_length",
-			Help: "Length of TF jobs work queue",
-		},
+		[]string{"job_namespace"},
 	)
 )
 
-func CreatedTFJobsCounterInc(namespace, name string) {
-	tfJobsCreatedCount.WithLabelValues(namespace, name).Inc()
+func CreatedTFJobsCounterInc(namespace string) {
+	tfJobsCreatedCount.WithLabelValues(namespace).Inc()
 }
 
-func SuccessfulTFJobsCounterInc(namespace, name string) {
-	tfJobsSuccessCount.WithLabelValues(namespace, name).Inc()
+func SuccessfulTFJobsCounterInc(namespace string) {
+	tfJobsSuccessCount.WithLabelValues(namespace).Inc()
 }
 
 func FailedTFJobsCounterInc(namespace, name string) {
@@ -66,6 +60,6 @@ func RestartedTFJobsCounterInc(namespace, name string) {
 	tfJobsRestartCount.WithLabelValues(namespace, name).Inc()
 }
 
-func DeletedTFJobsCounterInc(namespace, name string) {
-	tfJobsDeletedCount.WithLabelValues(namespace, name).Inc()
+func DeletedTFJobsCounterInc(namespace string) {
+	tfJobsDeletedCount.WithLabelValues(namespace).Inc()
 }

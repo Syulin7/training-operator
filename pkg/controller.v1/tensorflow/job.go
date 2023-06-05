@@ -100,7 +100,7 @@ func (tc *TFController) addTFJob(obj interface{}) {
 		return
 	}
 	tc.enqueueTFJob(obj)
-	CreatedTFJobsCounterInc(tfJob.Namespace, tfJob.Name)
+	CreatedTFJobsCounterInc(tfJob.Namespace)
 
 	// add a new rsync for StartingDeadlineSeconds
 	key, err := KeyFunc(tfJob)

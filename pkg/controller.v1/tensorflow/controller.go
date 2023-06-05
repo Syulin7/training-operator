@@ -228,7 +228,6 @@ func (tc *TFController) runWorker() {
 // processNextWorkItem will read a single work item off the workqueue and
 // attempt to process it, by calling the syncHandler.
 func (tc *TFController) processNextWorkItem() bool {
-	tfJobsWorkQueueLength.Set(float64(tc.WorkQueue.Len()))
 	obj, quit := tc.WorkQueue.Get()
 	if quit {
 		return false
@@ -251,9 +250,9 @@ func (tc *TFController) processNextWorkItem() bool {
 	if err != nil {
 		if err == errNotExists {
 			logger.Infof("TFJob has been deleted: %v", key)
-			namespace, name, err := cache.SplitMetaNamespaceKey(key)
+			namespace, _, err := cache.SplitMetaNamespaceKey(key)
 			if err == nil {
-				DeletedTFJobsCounterInc(namespace, name)
+				DeletedTFJobsCounterInc(namespace)
 			}
 			return true
 		}
@@ -326,7 +325,7 @@ func (tc *TFController) syncTFJob(key string) (bool, error) {
 	if err != nil {
 		if err == errNotExists {
 			logger.Infof("TFJob has been deleted: %v", key)
-			DeletedTFJobsCounterInc(namespace, name)
+			DeletedTFJobsCounterInc(namespace)
 			// jm.expectations.DeleteExpectations(key)
 			return true, nil
 		}

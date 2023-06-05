@@ -92,7 +92,7 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 					tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 					return err
 				}
-				SuccessfulTFJobsCounterInc(tfjob.Namespace, tfjob.Name)
+				SuccessfulTFJobsCounterInc(tfjob.Namespace)
 			}
 		}
 	} else {
@@ -110,7 +110,7 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 					tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 					return err
 				}
-				SuccessfulTFJobsCounterInc(tfjob.Namespace, tfjob.Name)
+				SuccessfulTFJobsCounterInc(tfjob.Namespace)
 			} else if running > 0 {
 				// Some workers are still running, leave a running condition.
 				msg := fmt.Sprintf("TFJob %s is running.", tfjob.Name)
