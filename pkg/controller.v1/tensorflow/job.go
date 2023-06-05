@@ -2,7 +2,6 @@ package tensorflow
 
 import (
 	"fmt"
-	"github.com/kubeflow/tf-operator/pkg/util"
 	"reflect"
 	"time"
 
@@ -10,26 +9,18 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	common "github.com/kubeflow/tf-operator/pkg/apis/common/v1"
 	tfv1 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1"
 	tflogger "github.com/kubeflow/tf-operator/pkg/logger"
+	"github.com/kubeflow/tf-operator/pkg/util"
 	"github.com/kubeflow/tf-operator/pkg/util/k8sutil"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
 	failedMarshalTFJobReason = "InvalidTFJobSpec"
-)
-
-var (
-	tfJobsCreatedCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "tf_operator_jobs_created",
-		Help: "Counts number of TF jobs created",
-	})
 )
 
 // When a pod is added, set the defaults and enqueue the current tfjob.
@@ -109,7 +100,7 @@ func (tc *TFController) addTFJob(obj interface{}) {
 		return
 	}
 	tc.enqueueTFJob(obj)
-	tfJobsCreatedCount.Inc()
+	CreatedTFJobsCounterInc(tfJob.Namespace)
 
 	// add a new rsync for StartingDeadlineSeconds
 	key, err := KeyFunc(tfJob)

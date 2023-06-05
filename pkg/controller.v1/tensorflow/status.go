@@ -19,14 +19,13 @@ import (
 	"fmt"
 	"time"
 
-	common "github.com/kubeflow/tf-operator/pkg/apis/common/v1"
-	tfv1 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1"
-	tflogger "github.com/kubeflow/tf-operator/pkg/logger"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+
+	common "github.com/kubeflow/tf-operator/pkg/apis/common/v1"
+	tfv1 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1"
+	tflogger "github.com/kubeflow/tf-operator/pkg/logger"
 )
 
 const (
@@ -40,21 +39,6 @@ const (
 	tfJobFailedReason = "TFJobFailed"
 	// tfJobRestarting is added in a tfjob when it is restarting.
 	tfJobRestartingReason = "TFJobRestarting"
-)
-
-var (
-	tfJobsSuccessCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "tf_operator_jobs_successful",
-		Help: "Counts number of TF jobs successful",
-	})
-	tfJobsFailureCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "tf_operator_jobs_failed",
-		Help: "Counts number of TF jobs failed",
-	})
-	tfJobsRestartCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "tf_operator_jobs_restarted",
-		Help: "Counts number of TF jobs restarted",
-	})
 )
 
 // updateStatus updates the status of the tfjob.
@@ -108,7 +92,7 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 					tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 					return err
 				}
-				tfJobsSuccessCount.Inc()
+				SuccessfulTFJobsCounterInc(tfjob.Namespace)
 			}
 		}
 	} else {
@@ -126,7 +110,7 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 					tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 					return err
 				}
-				tfJobsSuccessCount.Inc()
+				SuccessfulTFJobsCounterInc(tfjob.Namespace)
 			} else if running > 0 {
 				// Some workers are still running, leave a running condition.
 				msg := fmt.Sprintf("TFJob %s is running.", tfjob.Name)
@@ -149,8 +133,8 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 				tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 				return err
 			}
-			tfJobsFailureCount.Inc()
-			tfJobsRestartCount.Inc()
+			FailedTFJobsCounterInc(tfjob.Namespace, tfjob.Name)
+			RestartedTFJobsCounterInc(tfjob.Namespace, tfjob.Name)
 		} else {
 			msg := fmt.Sprintf("TFJob %s has failed because %d %s replica(s) failed.",
 				tfjob.Name, failed, rtype)
@@ -164,7 +148,7 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 				tflogger.LoggerForJob(tfjob).Infof("Append tfjob condition error: %v", err)
 				return err
 			}
-			tfJobsFailureCount.Inc()
+			FailedTFJobsCounterInc(tfjob.Namespace, tfjob.Name)
 		}
 	}
 	return nil
