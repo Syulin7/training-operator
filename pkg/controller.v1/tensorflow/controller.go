@@ -533,7 +533,7 @@ func (tc *TFController) satisfiedExpectations(tfjob *tfv1.TFJob) bool {
 	}
 
 	if util.CheckJobCompletedV1(tfjob.Status.Conditions) && tfjob.DeletionTimestamp == nil &&
-		tfjob.Annotations[TFCleanPodStatusLabel] == TFCleanStatusDone &&
+		(*tfjob.Spec.CleanPodPolicy == common.CleanPodPolicyNone || tfjob.Annotations[TFCleanPodStatusLabel] == TFCleanStatusDone) &&
 		tfjob.Spec.TTLSecondsAfterFinished == nil {
 		satisfied = false
 	}
