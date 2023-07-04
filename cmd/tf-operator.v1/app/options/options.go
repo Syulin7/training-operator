@@ -63,5 +63,5 @@ func (s *ServerOption) AddFlags(fs *flag.FlagSet) {
 
 	fs.IntVar(&s.MonitoringPort, "monitoring-port", 8443,
 		`Endpoint port for displaying monitoring metrics`)
-	fs.DurationVar(&s.ResyncPeriod, "resyc-period", DefaultResyncPeriod, "Resync interval of the tf-operator")
+	fs.DurationVar(&s.ResyncPeriod, "resync-period", DefaultResyncPeriod, "Resync interval of the tf-operator")
 }

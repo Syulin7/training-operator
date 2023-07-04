@@ -228,6 +228,7 @@ func (tc *TFController) processNextWorkItem() bool {
 	if quit {
 		return false
 	}
+
 	defer tc.WorkQueue.Done(obj)
 
 	var key string

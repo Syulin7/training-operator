@@ -99,6 +99,8 @@ func Run(opt *options.ServerOption) error {
 	if err != nil {
 		log.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
+	kcfg.QPS = 10
+	kcfg.Burst = 20
 
 	// Create clients.
 	kubeClientSet, leaderElectionClientSet, tfJobClientSet, kubeBatchClientSet, err := createClientSets(kcfg)
@@ -113,7 +115,7 @@ func Run(opt *options.ServerOption) error {
 	kubeInformerFactory := kubeinformers.NewFilteredSharedInformerFactory(kubeClientSet, opt.ResyncPeriod, opt.Namespace, nil)
 	tfJobInformerFactory := tfjobinformers.NewSharedInformerFactory(tfJobClientSet, opt.ResyncPeriod)
 
-	unstructuredInformer := controller.NewUnstructuredTFJobInformer(kcfg, opt.Namespace)
+	unstructuredInformer := controller.NewUnstructuredTFJobInformer(kcfg, opt.Namespace, opt.ResyncPeriod)
 
 	// Create tf controller.
 	tc := controller.NewTFController(unstructuredInformer, kubeClientSet, kubeBatchClientSet, tfJobClientSet, kubeInformerFactory, tfJobInformerFactory, *opt)
