@@ -70,6 +70,11 @@ const (
 	PodEvictAnnotation   = "cluster-autoscaler.kubernetes.io/safe-to-evict"
 
 	TFJobWaitingWorkerAnnotation = "arena.kubeflow.org/pod.ttlSecondsAfterFinished"
+
+	// JobPastActiveDeadlineActionAnnotation job past active deadline action:
+	// event: only report event
+	// failed or nil: set job status to failed and report event
+	JobPastActiveDeadlineActionAnnotation = "arena.kubeflow.org/active-deadline-action"
 )
 
 var (
@@ -412,7 +417,11 @@ func (tc *TFController) reconcileTFJobs(tfjob *tfv1.TFJob) error {
 		failureMessage = fmt.Sprintf("TFJob %s has failed because it has reached the specified backoff limit", tfjob.Name)
 	} else if tc.pastActiveDeadline(tfjob) {
 		failureMessage = fmt.Sprintf("TFJob %s has failed because it was active longer than specified deadline", tfjob.Name)
-		tfJobExceedsLimit = true
+		if action, ok := tfjob.Annotations[JobPastActiveDeadlineActionAnnotation]; ok && action == "event" {
+			tc.Recorder.Event(tfjob, v1.EventTypeWarning, tfJobFailedReason, failureMessage)
+		} else {
+			tfJobExceedsLimit = true
+		}
 	} else if tc.pastStartingDeadline(tfjob) {
 		failureMessage = fmt.Sprintf("TFJob %s failed due to exceeding the starting deadline", tfjob.Name)
 		tfJobExceedsLimit = true
