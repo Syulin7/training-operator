@@ -61,10 +61,16 @@ func (tc *TFController) updateStatusSingle(tfjob *tfv1.TFJob, rtype tfv1.TFRepli
 	if tfjob.Status.StartTime == nil {
 		now := metav1.Now()
 		tfjob.Status.StartTime = &now
-		// enqueue a sync to check if job past ActiveDeadlineSeconds
-		if tfjob.Spec.ActiveDeadlineSeconds != nil {
+	}
+
+	// enqueue a sync to check if job past ActiveDeadlineSeconds
+	if tfjob.Spec.ActiveDeadlineSeconds != nil {
+		now := metav1.Now()
+		duration := now.Time.Sub(tfjob.Status.StartTime.Time)
+		if time.Duration(*tfjob.Spec.ActiveDeadlineSeconds)*time.Second >= duration {
+			delayDuration := time.Duration(*tfjob.Spec.ActiveDeadlineSeconds)*time.Second - duration
 			tflogger.LoggerForJob(tfjob).Infof("Job with ActiveDeadlineSeconds will sync after %d seconds", *tfjob.Spec.ActiveDeadlineSeconds)
-			tc.WorkQueue.AddAfter(tfjobKey, time.Duration(*tfjob.Spec.ActiveDeadlineSeconds)*time.Second)
+			tc.WorkQueue.AddAfter(tfjobKey, delayDuration)
 		}
 	}
 
