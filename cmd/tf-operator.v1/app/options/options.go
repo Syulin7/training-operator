@@ -21,7 +21,7 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-const DefaultResyncPeriod = 12 * time.Hour
+const DefaultResyncPeriod = 1 * time.Hour
 
 // ServerOption is the main context object for the controller manager.
 type ServerOption struct {
