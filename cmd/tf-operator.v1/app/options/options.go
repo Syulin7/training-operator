@@ -21,7 +21,11 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-const DefaultResyncPeriod = 1 * time.Hour
+const (
+	DefaultResyncPeriod = 1 * time.Hour
+	EventLevelDebug     = "debug"
+	EventLevelInfo      = "info"
+)
 
 // ServerOption is the main context object for the controller manager.
 type ServerOption struct {
@@ -34,6 +38,7 @@ type ServerOption struct {
 	Namespace            string
 	MonitoringPort       int
 	ResyncPeriod         time.Duration
+	EventLevel           string
 }
 
 // NewServerOption creates a new CMServer with a default config.
@@ -64,4 +69,6 @@ func (s *ServerOption) AddFlags(fs *flag.FlagSet) {
 	fs.IntVar(&s.MonitoringPort, "monitoring-port", 8443,
 		`Endpoint port for displaying monitoring metrics`)
 	fs.DurationVar(&s.ResyncPeriod, "resync-period", DefaultResyncPeriod, "Resync interval of the tf-operator")
+
+	fs.StringVar(&s.EventLevel, "event-level", EventLevelDebug, "The tfjob event level, support info,debug.")
 }

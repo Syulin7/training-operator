@@ -77,6 +77,8 @@ type JobControllerConfiguration struct {
 
 	// Enable gang scheduling by kube-arbitrator
 	EnableGangScheduling bool
+
+	EventLevel string
 }
 
 // JobController abstracts other operators to manage the lifecycle of Jobs.
@@ -146,7 +148,8 @@ func NewJobController(
 	kubeClientSet kubeclientset.Interface,
 	kubeBatchClientSet kubebatchclient.Interface,
 	kubeInformerFactory kubeinformers.SharedInformerFactory,
-	workQueueName string) JobController {
+	workQueueName string,
+	eventLevel string) JobController {
 
 	log.Debug("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
@@ -162,11 +165,13 @@ func NewJobController(
 	realServiceControl := control.RealServiceControl{
 		KubeClient: kubeClientSet,
 		Recorder:   eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: controllerImpl.ControllerName()}),
+		EventLevel: eventLevel,
 	}
 
 	jobControllerConfig := JobControllerConfiguration{
 		ReconcilerSyncLoopPeriod: reconcilerSyncPeriod,
 		EnableGangScheduling:     enableGangScheduling,
+		EventLevel:               eventLevel,
 	}
 
 	jc := JobController{
