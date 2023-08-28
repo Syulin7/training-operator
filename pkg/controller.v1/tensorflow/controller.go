@@ -142,7 +142,7 @@ func NewTFController(
 	// Create base controller
 	log.Info("Creating Job controller")
 	jc := jobcontroller.NewJobController(tc, metav1.Duration{Duration: 15 * time.Second},
-		option.EnableGangScheduling, kubeClientSet, kubeBatchClientSet, kubeInformerFactory, tfv1.Plural)
+		option.EnableGangScheduling, kubeClientSet, kubeBatchClientSet, kubeInformerFactory, tfv1.Plural, option.EventLevel)
 	tc.JobController = jc
 	// Set sync handler.
 	tc.syncHandler = tc.syncTFJob

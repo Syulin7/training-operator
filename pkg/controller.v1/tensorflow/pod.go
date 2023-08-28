@@ -17,6 +17,7 @@ package tensorflow
 
 import (
 	"fmt"
+	"github.com/kubeflow/tf-operator/cmd/tf-operator.v1/app/options"
 	"strconv"
 	"strings"
 	"time"
@@ -128,7 +129,11 @@ func (tc *TFController) reconcilePods(
 				if status.Name == tfv1.DefaultContainerName && state.Terminated != nil {
 					exitCode = state.Terminated.ExitCode
 					logger.Infof("Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
-					tc.Recorder.Eventf(tfjob, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
+					if tc.JobController.Config.EventLevel == options.EventLevelDebug {
+						tc.Recorder.Eventf(tfjob, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
+					} else if exitCode != 0 {
+						tc.Recorder.Eventf(tfjob, v1.EventTypeNormal, exitedWithCodeReason, "Pod: %v.%v exited with code %v", pod.Namespace, pod.Name, exitCode)
+					}
 				}
 			}
 			// Check if the pod is retryable.

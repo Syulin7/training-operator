@@ -28,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
+
+	"github.com/kubeflow/tf-operator/cmd/tf-operator.v1/app/options"
 )
 
 const (
@@ -73,6 +75,7 @@ func validateControllerRef(controllerRef *metav1.OwnerReference) error {
 type RealServiceControl struct {
 	KubeClient clientset.Interface
 	Recorder   record.EventRecorder
+	EventLevel string
 }
 
 func (r RealServiceControl) PatchService(namespace, name string, data []byte) error {
@@ -113,7 +116,9 @@ func (r RealServiceControl) createServices(namespace string, service *v1.Service
 		return nil
 	}
 	log.Infof("Controller %v created service %v", accessor.GetName(), newService.Name)
-	r.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreateServiceReason, "Created service: %v", newService.Name)
+	if r.EventLevel == options.EventLevelDebug {
+		r.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulCreateServiceReason, "Created service: %v", newService.Name)
+	}
 
 	return nil
 }
@@ -139,7 +144,7 @@ func (r RealServiceControl) DeleteService(namespace, serviceID string, object ru
 	if err := r.KubeClient.CoreV1().Services(namespace).Delete(serviceID, nil); err != nil {
 		r.Recorder.Eventf(object, v1.EventTypeWarning, FailedDeleteServiceReason, "Error deleting: %v", err)
 		return fmt.Errorf("unable to delete service: %v", err)
-	} else {
+	} else if r.EventLevel == options.EventLevelDebug {
 		r.Recorder.Eventf(object, v1.EventTypeNormal, SuccessfulDeleteServiceReason, "Deleted service: %v", serviceID)
 	}
 	return nil
