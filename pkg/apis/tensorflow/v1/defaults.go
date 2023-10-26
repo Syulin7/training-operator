@@ -49,7 +49,7 @@ func setDefaultPort(spec *v1.PodSpec) {
 			break
 		}
 	}
-	if !hasTFJobPort {
+	if !hasTFJobPort && !spec.HostNetwork {
 		spec.Containers[index].Ports = append(spec.Containers[index].Ports, v1.ContainerPort{
 			Name:          DefaultPortName,
 			ContainerPort: DefaultPort,

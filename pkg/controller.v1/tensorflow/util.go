@@ -28,6 +28,10 @@ var (
 // GetPortFromTFJob gets the port of tensorflow container.
 func GetPortFromTFJob(tfJob *tfv1.TFJob, rtype tfv1.TFReplicaType) (int32, error) {
 	containers := tfJob.Spec.TFReplicaSpecs[rtype].Template.Spec.Containers
+	if tfJob.Spec.TFReplicaSpecs[rtype].Template.Spec.HostNetwork {
+		return tfv1.DefaultPort, nil
+	}
+
 	for _, container := range containers {
 		if container.Name == tfv1.DefaultContainerName {
 			ports := container.Ports
