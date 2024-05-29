@@ -592,7 +592,7 @@ func (tc *TFController) pastBackoffLimit(tfjob *tfv1.TFJob, pods []*v1.Pod) (boo
 
 // pastActiveDeadline checks if job has ActiveDeadlineSeconds field set and if it is exceeded.
 func (tc *TFController) pastActiveDeadline(tfjob *tfv1.TFJob) bool {
-	if tfjob.Spec.ActiveDeadlineSeconds == nil || tfjob.Status.StartTime == nil {
+	if tfjob.Spec.ActiveDeadlineSeconds == nil || tfjob.Status.StartTime == nil || tfjob.Status.CompletionTime != nil {
 		return false
 	}
 	now := metav1.Now()
